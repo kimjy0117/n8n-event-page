@@ -1,0 +1,339 @@
+{
+  "name": "AI Design Optimizer",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 24
+            }
+          ]
+        }
+      },
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "stats",
+        "returnAll": false,
+        "limit": 1,
+        "filterType": "manual",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "date",
+              "keyValue": "={{ $today.minus({days: 1}).toFormat('yyyy-MM-dd') }}",
+              "condition": "equals"
+            }
+          ]
+        }
+      },
+      "name": "Get Yesterday Stats",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [450, 300],
+      "credentials": {
+        "supabaseApi": {
+          "id": "1",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 어제 통계 가져오기\nconst stats = $input.first().json;\n\n// CTR 계산\nconst visits = stats.visits || 0;\nconst clicks = stats.clicks || 0;\nconst ctr = visits > 0 ? (clicks / visits * 100) : 0;\n\n// 임계값 설정 (5%)\nconst threshold = 5;\nconst needsImprovement = ctr < threshold;\n\n// 결과 반환\nreturn {\n  json: {\n    date: stats.date,\n    visits,\n    clicks,\n    ctr: ctr.toFixed(2),\n    threshold,\n    needsImprovement,\n    stats\n  }\n};"
+      },
+      "name": "Calculate CTR",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.needsImprovement }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "name": "IF CTR Low",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "filePath": "/path/to/your/project/src/components/EventPage.jsx"
+      },
+      "name": "Read Current Code",
+      "type": "n8n-nodes-base.readBinaryFile",
+      "typeVersion": 1,
+      "position": [1050, 200]
+    },
+    {
+      "parameters": {
+        "mode": "binaryToText",
+        "options": {}
+      },
+      "name": "Convert to Text",
+      "type": "n8n-nodes-base.moveBinaryData",
+      "typeVersion": 1,
+      "position": [1250, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": []
+        },
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"claude-3-5-sonnet-20241022\",\n  \"max_tokens\": 4096,\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"당신은 UX/UI 전문가입니다. 다음 React 이벤트 페이지의 전환율(CTR)이 {{ $('IF CTR Low').item.json.ctr }}%로 낮습니다.\\n\\n[현재 코드]\\n{{ $('Convert to Text').item.json.data }}\\n\\n[요구사항]\\n- CTR을 높이기 위해 디자인을 개선한 완전히 새로운 React 컴포넌트 코드를 작성하세요\\n- 버튼 색상, 크기, 문구, 위치, 레이아웃을 창의적으로 변경하세요\\n- 기존 useStats 훅과 Supabase 연동 로직은 반드시 유지하세요\\n- import 문과 export 문을 포함한 완전한 JSX 파일 형태로 작성하세요\\n- 코드만 출력하고 설명은 제외하세요\\n- 마크다운 코드 블록(```)은 사용하지 마세요\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "name": "Call Claude API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1450, 200],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "2",
+          "name": "Claude API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.first().json;\n\n// Claude 응답에서 코드 추출\nlet newCode = response.content[0].text;\n\n// 마크다운 코드 블록 제거 (혹시 포함되어 있을 경우)\nnewCode = newCode.replace(/```jsx?\\n?/g, '').replace(/```\\n?$/g, '');\n\nreturn {\n  json: {\n    newCode,\n    ctr: $('IF CTR Low').item.json.ctr,\n    date: $('IF CTR Low').item.json.date\n  }\n};"
+      },
+      "name": "Extract Code",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1650, 200]
+    },
+    {
+      "parameters": {
+        "fileName": "/path/to/your/project/src/components/EventPage.jsx",
+        "dataPropertyName": "newCode"
+      },
+      "name": "Write New Code",
+      "type": "n8n-nodes-base.writeBinaryFile",
+      "typeVersion": 1,
+      "position": [1850, 200]
+    },
+    {
+      "parameters": {
+        "command": "=cd /path/to/your/project && git config user.name \"n8n Bot\" && git config user.email \"bot@n8n.io\" && git add src/components/EventPage.jsx && git commit -m \"chore: AI-generated design update (CTR: {{ $('Extract Code').item.json.ctr }}%)\""
+      },
+      "name": "Git Commit",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [2050, 200]
+    },
+    {
+      "parameters": {
+        "command": "=cd /path/to/your/project && git push https://YOUR_GITHUB_TOKEN@github.com/YOUR_USERNAME/YOUR_REPO.git main"
+      },
+      "name": "Git Push",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [2250, 200]
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "tableId": "code_history",
+        "dataMode": "defineBelow",
+        "columnsUi": {
+          "columnValues": [
+            {
+              "column": "version",
+              "value": "={{ $now.toUnixInteger() }}"
+            },
+            {
+              "column": "code_content",
+              "value": "={{ $('Extract Code').item.json.newCode }}"
+            },
+            {
+              "column": "design_description",
+              "value": "=AI-generated improvement for CTR {{ $('Extract Code').item.json.ctr }}%"
+            },
+            {
+              "column": "avg_ctr",
+              "value": "={{ parseFloat($('Extract Code').item.json.ctr) }}"
+            },
+            {
+              "column": "git_commit_hash",
+              "value": "={{ $('Git Commit').item.json.stdout }}"
+            }
+          ]
+        }
+      },
+      "name": "Save History",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [2450, 200],
+      "credentials": {
+        "supabaseApi": {
+          "id": "1",
+          "name": "Supabase account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Yesterday Stats",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Yesterday Stats": {
+      "main": [
+        [
+          {
+            "node": "Calculate CTR",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate CTR": {
+      "main": [
+        [
+          {
+            "node": "IF CTR Low",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF CTR Low": {
+      "main": [
+        [
+          {
+            "node": "Read Current Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Current Code": {
+      "main": [
+        [
+          {
+            "node": "Convert to Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to Text": {
+      "main": [
+        [
+          {
+            "node": "Call Claude API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Claude API": {
+      "main": [
+        [
+          {
+            "node": "Extract Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Code": {
+      "main": [
+        [
+          {
+            "node": "Write New Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write New Code": {
+      "main": [
+        [
+          {
+            "node": "Git Commit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Git Commit": {
+      "main": [
+        [
+          {
+            "node": "Git Push",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Git Push": {
+      "main": [
+        [
+          {
+            "node": "Save History",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {},
+  "staticData": null,
+  "tags": [],
+  "pinData": {},
+  "versionId": "1"
+}
+

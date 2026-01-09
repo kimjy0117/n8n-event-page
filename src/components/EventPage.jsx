@@ -1,3 +1,6 @@
+import { useStats } from '../hooks/useStats'
+import '../styles/event.css'
+
 function EventPage() {
   const { recordClick } = useStats()
 

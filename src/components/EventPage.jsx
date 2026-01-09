@@ -9,7 +9,7 @@ function EventPage() {
   return (
     <div className="event-container" style={{ maxWidth: '480px', margin: '40px auto', padding: '20px', textAlign: 'center', fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif", background: '#fff', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)' }}>
       <div className="hero-section">
-        <h1 className="hero-title" style={{ fontSize: '2.8rem', fontWeight: '700', color: '#f47c20', marginBottom: '12px', textShadow: '1px 1px 3px rgba(255, 90, 0, 0.3)' }}>
+        <h1 className="hero-title" style={{ fontSize: '2.6rem', fontWeight: '700', color: '#f47c20', marginBottom: '12px', textShadow: '1px 1px 3px rgba(255, 90, 0, 0.3)' }}>
           🎉 지금 바로 이벤트 참여하고 특별한 혜택을 챙기세요!
         </h1>
         <p className="hero-description" style={{ fontSize: '1.15rem', color: '#333', lineHeight: '1.5', marginBottom: '30px' }}>
@@ -21,26 +21,26 @@ function EventPage() {
           className="cta-button"
           onClick={handleButtonClick}
           style={{
-            backgroundColor: '#f47c20',
+            backgroundColor: '#ff5733',
             color: '#fff',
-            fontSize: '1.6rem',
+            fontSize: '1.8rem',
             fontWeight: '700',
-            padding: '16px 0',
+            padding: '18px 0',
             width: '100%',
             borderRadius: '50px',
             border: 'none',
-            boxShadow: '0 6px 15px rgba(255, 128, 0, 0.5)',
+            boxShadow: '0 6px 15px rgba(255, 100, 0, 0.5)',
             cursor: 'pointer',
             transition: 'all 0.3s ease',
             marginBottom: '40px',
             userSelect: 'none',
             position: 'relative'
           }}
-          onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#d86c18')}
-          onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#f47c20')}
+          onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#e85d32')}
+          onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#ff5733')}
           aria-label="이벤트 참여하기 버튼"
         >
-          지금 바로 참여하고 선물 받기 🚀
+          지금 참여하고 한정 선물 받기! 🚀
           <span style={{ position: 'absolute', right: '20px', fontSize: '1.2rem' }}>🎁</span>
         </button>
 

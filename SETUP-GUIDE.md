@@ -5,13 +5,14 @@
 ## 📝 체크리스트
 
 - [ ] 1. Supabase 프로젝트 생성 및 테이블 설정
-- [ ] 2. 환경 변수 설정
-- [ ] 3. GitHub 레포 생성 및 연결
-- [ ] 4. Vercel 배포
-- [ ] 5. Claude API Key 발급
-- [ ] 6. GitHub Personal Access Token 발급
-- [ ] 7. n8n 워크플로우 설정
-- [ ] 8. 테스트 실행
+- [ ] 2. Supabase Storage 버킷 생성 (스크린샷용)
+- [ ] 3. 환경 변수 설정
+- [ ] 4. GitHub 레포 생성 및 연결
+- [ ] 5. Vercel 배포
+- [ ] 6. Gemini API Key 발급
+- [ ] 7. GitHub Personal Access Token 발급
+- [ ] 8. n8n 워크플로우 설정 (클라우드)
+- [ ] 9. 테스트 실행
 
 ---
 
@@ -42,12 +43,33 @@
 3. 다음 정보 복사:
    - `Project URL` (예: https://abcdefgh.supabase.co)
    - `anon public` 키 (긴 문자열)
+   - `service_role` 키 (스크린샷 업로드용 - ⚠️ 절대 클라이언트에 노출 금지!)
 
 ---
 
-## 2️⃣ 환경 변수 설정 (2분)
+## 2️⃣ Supabase Storage 버킷 생성 (2분) 📸
 
-### 2.1 로컬 환경
+> 디자인 변경 후 스크린샷을 저장하기 위한 Storage 버킷입니다.
+
+### 2.1 버킷 생성
+
+1. Supabase Dashboard > 좌측 메뉴 **Storage** 클릭
+2. **New bucket** 클릭
+3. 설정:
+   - Name: `screenshots`
+   - Public bucket: ✅ **체크** (이미지 URL로 바로 접근하려면)
+4. **Create bucket** 클릭
+
+### 2.2 정책 확인
+
+Public bucket으로 설정하면 자동으로 공개 읽기가 가능합니다.
+업로드는 `service_role` 키로 인증하여 진행합니다.
+
+---
+
+## 3️⃣ 환경 변수 설정 (2분)
+
+### 3.1 로컬 환경
 
 1. 프로젝트 루트에 `.env` 파일 생성 (이미 있음)
 2. 다음 내용으로 수정:
@@ -59,7 +81,7 @@ VITE_SUPABASE_ANON_KEY=YOUR_ANON_KEY_HERE
 
 3. `YOUR_PROJECT_ID`와 `YOUR_ANON_KEY_HERE`를 실제 값으로 교체
 
-### 2.2 로컬 테스트
+### 3.2 로컬 테스트
 
 ```bash
 npm run dev
@@ -69,9 +91,9 @@ npm run dev
 
 ---
 
-## 3️⃣ GitHub 레포 생성 (3분)
+## 4️⃣ GitHub 레포 생성 (3분)
 
-### 3.1 GitHub에서 레포 생성
+### 4.1 GitHub에서 레포 생성
 
 1. [GitHub](https://github.com) 로그인
 2. 우측 상단 "+" > "New repository" 클릭
@@ -82,7 +104,7 @@ npm run dev
    - **Initialize this repository with:** 모두 체크 해제
 4. "Create repository" 클릭
 
-### 3.2 로컬 레포 연결
+### 4.2 로컬 레포 연결
 
 ```bash
 # GitHub 레포 URL로 교체
@@ -95,21 +117,21 @@ git branch -M main
 git push -u origin main
 ```
 
-### 3.3 확인
+### 4.3 확인
 
 GitHub 레포 페이지를 새로고침하여 파일들이 업로드되었는지 확인
 
 ---
 
-## 4️⃣ Vercel 배포 (5분)
+## 5️⃣ Vercel 배포 (5분)
 
-### 4.1 Vercel 계정 생성
+### 5.1 Vercel 계정 생성
 
 1. [Vercel](https://vercel.com) 접속
 2. "Sign Up" 클릭
 3. "Continue with GitHub" 선택 (권장)
 
-### 4.2 프로젝트 배포
+### 5.2 프로젝트 배포
 
 1. Dashboard에서 "Add New..." > "Project" 클릭
 2. GitHub 레포 목록에서 `n8n-event-page` 선택
@@ -128,35 +150,35 @@ GitHub 레포 페이지를 새로고침하여 파일들이 업로드되었는지
    - "Add" 클릭
 6. "Deploy" 클릭 (약 1-2분 소요)
 
-### 4.3 배포 확인
+### 5.3 배포 확인
 
 1. 배포 완료 후 "Visit" 버튼 클릭
 2. 이벤트 페이지가 정상 작동하는지 확인
-3. 버튼 클릭 후 Supabase Dashboard > Table Editor > stats 테이블에서 통계 확인
+3. **배포 URL 복사** (예: `https://your-app.vercel.app`) - n8n 설정에 필요!
 
 ---
 
-## 5️⃣ Claude API Key 발급 (3분)
+## 6️⃣ Gemini API Key 발급 (3분)
 
-### 5.1 Anthropic 계정 생성
+### 6.1 Google AI Studio 접속
 
-1. [Anthropic Console](https://console.anthropic.com/) 접속
-2. 계정 생성 또는 로그인
-3. 결제 정보 등록 (API 사용을 위해 필요)
+1. [Google AI Studio](https://aistudio.google.com/app/apikey) 접속
+2. Google 계정으로 로그인
 
-### 5.2 API Key 생성
+### 6.2 API Key 생성
 
-1. 좌측 메뉴에서 **API Keys** 클릭
-2. "Create Key" 클릭
-3. Key 이름 입력 (예: `n8n-design-optimizer`)
-4. "Create Key" 클릭
-5. **API Key 복사** (다시 볼 수 없으니 안전한 곳에 저장!)
+1. "Create API key" 클릭
+2. 프로젝트 선택 또는 새 프로젝트 생성
+3. "Create API key in new project" 클릭
+4. **API Key 복사** (다시 볼 수 없으니 안전한 곳에 저장!)
+
+> 💡 **Tip**: Gemini API는 무료 티어가 있어서 테스트용으로 부담 없이 사용할 수 있습니다!
 
 ---
 
-## 6️⃣ GitHub Personal Access Token 발급 (3분)
+## 7️⃣ GitHub Personal Access Token 발급 (3분)
 
-### 6.1 Token 생성
+### 7.1 Token 생성
 
 1. GitHub 로그인
 2. 우측 상단 프로필 > **Settings** 클릭
@@ -164,7 +186,7 @@ GitHub 레포 페이지를 새로고침하여 파일들이 업로드되었는지
 4. **Personal access tokens** > **Tokens (classic)** 클릭
 5. "Generate new token" > "Generate new token (classic)" 클릭
 6. Token 정보:
-   - Note: `n8n-git-push`
+   - Note: `n8n-github-api`
    - Expiration: 90 days (또는 원하는 기간)
    - **Select scopes**: `repo` 전체 체크 ✅
 7. "Generate token" 클릭
@@ -172,31 +194,17 @@ GitHub 레포 페이지를 새로고침하여 파일들이 업로드되었는지
 
 ---
 
-## 7️⃣ n8n 워크플로우 설정 (15분)
+## 8️⃣ n8n 클라우드 워크플로우 설정 (15분)
 
-### 7.1 n8n 설치 (옵션 1: Docker)
+### 8.1 n8n 클라우드 가입
 
-```bash
-docker run -it --rm \
-  --name n8n \
-  -p 5678:5678 \
-  -v ~/.n8n:/home/node/.n8n \
-  n8nio/n8n
-```
+1. [n8n Cloud](https://n8n.io) 접속
+2. "Start for Free" 클릭하여 계정 생성
+3. 워크스페이스 생성
 
-### 7.2 n8n 설치 (옵션 2: npm)
+> 💡 n8n 클라우드는 로컬 파일 시스템에 접근할 수 없으므로, **GitHub API**를 통해 파일을 읽고/쓰게 됩니다.
 
-```bash
-npm install -g n8n
-n8n
-```
-
-### 7.3 n8n 접속
-
-1. 브라우저에서 `http://localhost:5678` 접속
-2. 계정 생성 (이메일, 비밀번호)
-
-### 7.4 Credentials 설정
+### 8.2 Credentials 설정
 
 #### Supabase Credential
 
@@ -208,50 +216,76 @@ n8n
    - Service Role Secret: Supabase Dashboard > Project Settings > API > `service_role` 키
 4. "Save" 클릭
 
-#### Claude API Credential
+#### GitHub Token Credential
 
 1. "Add Credential" > "Header Auth" 검색 및 선택
 2. 정보 입력:
-   - Credential Name: `Claude API`
-   - Name: `x-api-key`
-   - Value: Claude API Key
+   - Credential Name: `GitHub Token`
+   - Name: `Authorization`
+   - Value: `Bearer YOUR_GITHUB_TOKEN` (Bearer 뒤에 공백 필수!)
 3. "Save" 클릭
 
-### 7.5 워크플로우 Import
+### 8.3 워크플로우 Import
 
 1. 좌측 메뉴 **Workflows** 클릭
 2. 우측 상단 "..." > "Import from File" 클릭
 3. `n8n-workflow.json` 파일 선택
 4. 워크플로우가 로드됨
 
-### 7.6 워크플로우 수정
+### 8.4 워크플로우 수정 ⚠️ 중요!
 
-다음 노드들의 경로를 실제 프로젝트 경로로 수정:
+다음 노드들에서 값을 실제 정보로 수정하세요:
 
-1. **Read Current Code** 노드:
-   - File Path: `C:/Users/Owner/Desktop/kjy/n8n_test/n8n_test_01/src/components/EventPage.jsx`
+#### 1. **Read Code from GitHub** 노드:
+- URL에서 `YOUR_USERNAME/YOUR_REPO`를 실제 GitHub 정보로 변경
+```
+https://api.github.com/repos/YOUR_USERNAME/n8n-event-page/contents/src/components/EventPage.jsx
+```
 
-2. **Write New Code** 노드:
-   - File Path: `C:/Users/Owner/Desktop/kjy/n8n_test/n8n_test_01/src/components/EventPage.jsx`
+#### 2. **Call Gemini API** 노드:
+- URL에서 `YOUR_GEMINI_API_KEY`를 실제 Gemini API 키로 변경
+```
+https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=YOUR_GEMINI_API_KEY
+```
 
-3. **Git Commit** 노드:
-   - Command: `cd C:/Users/Owner/Desktop/kjy/n8n_test/n8n_test_01 && git config user.name "n8n Bot" && git config user.email "bot@n8n.io" && git add src/components/EventPage.jsx && git commit -m "chore: AI-generated design update (CTR: {{ $('Extract Code').item.json.ctr }}%)"`
+#### 3. **Update Code on GitHub** 노드:
+- URL에서 `YOUR_USERNAME/YOUR_REPO`를 실제 GitHub 정보로 변경
+```
+https://api.github.com/repos/YOUR_USERNAME/n8n-event-page/contents/src/components/EventPage.jsx
+```
 
-4. **Git Push** 노드:
-   - Command: `cd C:/Users/Owner/Desktop/kjy/n8n_test/n8n_test_01 && git push https://YOUR_GITHUB_TOKEN@github.com/YOUR_USERNAME/n8n-event-page.git main`
-   - `YOUR_GITHUB_TOKEN`: GitHub Personal Access Token
-   - `YOUR_USERNAME`: GitHub 사용자명
+#### 4. **Take Screenshot** 노드: 📸
+- Code 노드 안에서 `YOUR_VERCEL_SITE_URL`을 실제 Vercel 배포 URL로 변경
+```javascript
+const siteUrl = 'https://your-app.vercel.app'; // 실제 URL로 변경!
+```
 
-### 7.7 워크플로우 저장 및 활성화
+#### 5. **Upload to Supabase Storage** 노드: 📸
+- Code 노드 안에서 Supabase 정보 변경
+```javascript
+const supabaseUrl = 'https://abcdefgh.supabase.co'; // 실제 URL로 변경!
+const supabaseKey = 'YOUR_SUPABASE_SERVICE_ROLE_KEY'; // service_role 키로 변경!
+```
+
+### 8.5 Credentials 연결
+
+각 노드에 Credentials 연결:
+
+1. **Read Code from GitHub** 노드 → `GitHub Token` credential 선택
+2. **Update Code on GitHub** 노드 → `GitHub Token` credential 선택
+3. **Get Yesterday Stats** 노드 → `Supabase account` credential 선택
+4. **Save History** 노드 → `Supabase account` credential 선택
+
+### 8.6 워크플로우 저장 및 활성화
 
 1. 우측 상단 "Save" 클릭
 2. "Active" 토글을 ON으로 변경
 
 ---
 
-## 8️⃣ 테스트 (5분)
+## 9️⃣ 테스트 (5분)
 
-### 8.1 수동 테스트
+### 9.1 수동 테스트
 
 1. Supabase Dashboard > Table Editor > stats 테이블
 2. 어제 날짜로 테스트 데이터 삽입:
@@ -266,11 +300,13 @@ n8n
    - 에러가 있으면 해당 노드 클릭하여 로그 확인
 
 4. 결과 확인:
-   - GitHub 레포에 새 커밋이 푸시되었는지 확인
+   - GitHub 레포에 새 커밋이 생성되었는지 확인
    - Vercel에서 자동 배포가 시작되었는지 확인
    - 배포 완료 후 사이트 접속하여 디자인 변경 확인
+   - **Supabase Storage > screenshots 버킷**에 스크린샷 저장 확인 📸
+   - **code_history 테이블**에 screenshot_url 저장 확인 📸
 
-### 8.2 실제 테스트
+### 9.2 실제 테스트
 
 1. 배포된 사이트 접속
 2. 페이지를 여러 번 새로고침 (방문수 증가)
@@ -285,9 +321,43 @@ n8n
 모든 설정이 완료되었습니다. 이제 시스템이 자동으로:
 
 1. 매일 오전 9시에 어제 통계를 확인
-2. CTR이 5% 미만이면 Claude AI가 새로운 디자인 생성
-3. Git에 자동 커밋/푸시
+2. CTR이 5% 미만이면 **Gemini AI**가 새로운 디자인 생성
+3. **GitHub API**로 자동 커밋
 4. Vercel에서 자동 재배포
+5. **Google PageSpeed API**로 스크린샷 촬영 📸
+6. **Supabase Storage**에 스크린샷 저장 📸
+
+---
+
+## 🔄 워크플로우 흐름도
+
+```
+Schedule Trigger (매일 실행)
+       ↓
+Get Yesterday Stats (Supabase에서 어제 통계 조회)
+       ↓
+Calculate CTR (CTR 계산)
+       ↓
+IF CTR Low (CTR < 5% 체크)
+       ↓
+Read Code from GitHub (GitHub API로 현재 코드 읽기)
+       ↓
+Decode Base64 (GitHub 응답 디코딩 + Gemini 요청 준비)
+       ↓
+Call Gemini API (AI가 새 디자인 생성)
+       ↓
+Extract Code (코드 추출 및 인코딩)
+       ↓
+Update Code on GitHub (GitHub API로 코드 업데이트 + 자동 커밋)
+       ↓
+Wait for Deploy (Vercel 배포 대기 - 60초) ⏳
+       ↓
+Take Screenshot (Google PageSpeed API로 스크린샷) 📸
+       ↓
+Upload to Supabase Storage (스크린샷 저장) 📸
+       ↓
+Save History (Supabase에 히스토리 + screenshot_url 저장)
+```
 
 ---
 
@@ -298,15 +368,23 @@ n8n
 - Vercel 환경 변수 확인
 - Supabase RLS 정책 확인
 
-### n8n Git Push 실패
+### GitHub API 에러
 - GitHub Token 권한 확인 (repo 권한 필요)
-- 프로젝트 경로 확인 (절대 경로 사용)
-- Git 설정 확인 (user.name, user.email)
+- Token 앞에 `Bearer ` 붙였는지 확인 (공백 포함!)
+- URL의 레포 경로가 정확한지 확인
+- 파일 경로가 정확한지 확인
 
-### Claude API 에러
+### Gemini API 에러
 - API Key 확인
-- 크레딧 잔액 확인
-- 요청 형식 확인
+- 모델명 확인: `gemini-2.0-flash` 사용 권장
+- URL에 key 파라미터가 포함되었는지 확인
+- 요청 형식 확인 (contents 배열 형식)
+
+### 스크린샷 에러 📸
+- Vercel 배포 URL이 정확한지 확인
+- Google PageSpeed API는 무료이며 API 키 불필요
+- Supabase Storage 버킷이 `screenshots`로 생성되었는지 확인
+- Supabase `service_role` 키가 정확한지 확인 (anon 키 아님!)
 
 ### Vercel 배포 실패
 - Build 로그 확인
@@ -320,5 +398,5 @@ n8n
 - Supabase: https://supabase.com/docs
 - n8n: https://docs.n8n.io
 - Vercel: https://vercel.com/docs
-- Claude API: https://docs.anthropic.com
-
+- Gemini API: https://ai.google.dev/docs
+- Google PageSpeed API: https://developers.google.com/speed/docs/insights/v5/get-started

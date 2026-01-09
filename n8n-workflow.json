@@ -23,17 +23,8 @@
         "tableId": "stats",
         "returnAll": false,
         "limit": 1,
-        "filterType": "manual",
-        "matchType": "allFilters",
-        "filters": {
-          "conditions": [
-            {
-              "keyName": "date",
-              "keyValue": "={{ $today.minus({days: 1}).toFormat('yyyy-MM-dd') }}",
-              "condition": "equals"
-            }
-          ]
-        }
+        "filterType": "string",
+        "filterString": "=date=eq.{{ $today.minus({days: 1}).toFormat('yyyy-MM-dd') }}"
       },
       "name": "Get Yesterday Stats",
       "type": "n8n-nodes-base.supabase",
@@ -73,64 +64,67 @@
     },
     {
       "parameters": {
-        "filePath": "/path/to/your/project/src/components/EventPage.jsx"
-      },
-      "name": "Read Current Code",
-      "type": "n8n-nodes-base.readBinaryFile",
-      "typeVersion": 1,
-      "position": [1050, 200]
-    },
-    {
-      "parameters": {
-        "mode": "binaryToText",
-        "options": {}
-      },
-      "name": "Convert to Text",
-      "type": "n8n-nodes-base.moveBinaryData",
-      "typeVersion": 1,
-      "position": [1250, 200]
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "https://api.anthropic.com/v1/messages",
+        "method": "GET",
+        "url": "https://api.github.com/repos/YOUR_USERNAME/YOUR_REPO/contents/src/components/EventPage.jsx",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
-              "name": "anthropic-version",
-              "value": "2023-06-01"
-            },
-            {
-              "name": "content-type",
-              "value": "application/json"
+              "name": "Accept",
+              "value": "application/vnd.github.v3+json"
             }
           ]
         },
-        "sendBody": true,
-        "bodyParameters": {
-          "parameters": []
-        },
-        "specifyBody": "json",
-        "jsonBody": "={\n  \"model\": \"claude-3-5-sonnet-20241022\",\n  \"max_tokens\": 4096,\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"당신은 UX/UI 전문가입니다. 다음 React 이벤트 페이지의 전환율(CTR)이 {{ $('IF CTR Low').item.json.ctr }}%로 낮습니다.\\n\\n[현재 코드]\\n{{ $('Convert to Text').item.json.data }}\\n\\n[요구사항]\\n- CTR을 높이기 위해 디자인을 개선한 완전히 새로운 React 컴포넌트 코드를 작성하세요\\n- 버튼 색상, 크기, 문구, 위치, 레이아웃을 창의적으로 변경하세요\\n- 기존 useStats 훅과 Supabase 연동 로직은 반드시 유지하세요\\n- import 문과 export 문을 포함한 완전한 JSX 파일 형태로 작성하세요\\n- 코드만 출력하고 설명은 제외하세요\\n- 마크다운 코드 블록(```)은 사용하지 마세요\"\n    }\n  ]\n}",
         "options": {}
       },
-      "name": "Call Claude API",
+      "name": "Read Code from GitHub",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
-      "position": [1450, 200],
+      "position": [1050, 200],
       "credentials": {
         "httpHeaderAuth": {
-          "id": "2",
-          "name": "Claude API"
+          "id": "3",
+          "name": "GitHub Token"
         }
       }
     },
     {
       "parameters": {
-        "jsCode": "const response = $input.first().json;\n\n// Claude 응답에서 코드 추출\nlet newCode = response.content[0].text;\n\n// 마크다운 코드 블록 제거 (혹시 포함되어 있을 경우)\nnewCode = newCode.replace(/```jsx?\\n?/g, '').replace(/```\\n?$/g, '');\n\nreturn {\n  json: {\n    newCode,\n    ctr: $('IF CTR Low').item.json.ctr,\n    date: $('IF CTR Low').item.json.date\n  }\n};"
+        "jsCode": "// GitHub API는 파일 내용을 Base64로 반환\nconst response = $input.first().json;\nconst content = Buffer.from(response.content, 'base64').toString('utf-8');\nconst sha = response.sha; // 업데이트 시 필요\nconst ctr = $('IF CTR Low').item.json.ctr;\n\n// Gemini API용 프롬프트 생성\nconst prompt = `당신은 UX/UI 전문가입니다. 다음 React 이벤트 페이지의 전환율(CTR)이 ${ctr}%로 낮습니다.\n\n[현재 코드]\n${content}\n\n[요구사항]\n- CTR을 높이기 위해 디자인을 개선한 완전히 새로운 React 컴포넌트 코드를 작성하세요\n- 버튼 색상, 크기, 문구, 위치, 레이아웃을 창의적으로 변경하세요\n- 기존 useStats 훅과 Supabase 연동 로직은 반드시 유지하세요\n- import 문과 export 문을 포함한 완전한 JSX 파일 형태로 작성하세요\n- 코드만 출력하고 설명은 제외하세요\n- 마크다운 코드 블록은 사용하지 마세요`;\n\n// Gemini API request body\nconst geminiRequestBody = {\n  contents: [\n    {\n      parts: [\n        {\n          text: prompt\n        }\n      ]\n    }\n  ],\n  generationConfig: {\n    maxOutputTokens: 4096\n  }\n};\n\nreturn {\n  json: {\n    data: content,\n    sha: sha,\n    path: response.path,\n    geminiRequestBody: geminiRequestBody\n  }\n};"
+      },
+      "name": "Decode Base64",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1250, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=YOUR_GEMINI_API_KEY",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.geminiRequestBody }}",
+        "options": {}
+      },
+      "name": "Call Gemini API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1450, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.first().json;\n\n// Gemini 응답에서 코드 추출\nlet newCode = response.candidates[0].content.parts[0].text;\n\n// 마크다운 코드 블록 제거 (혹시 포함되어 있을 경우)\nnewCode = newCode.replace(/```jsx?\\n?/g, '').replace(/```\\n?$/g, '').trim();\n\n// Base64로 인코딩 (GitHub API 업로드용)\nconst encodedCode = Buffer.from(newCode).toString('base64');\n\nreturn {\n  json: {\n    newCode,\n    encodedCode,\n    ctr: $('IF CTR Low').item.json.ctr,\n    date: $('IF CTR Low').item.json.date,\n    sha: $('Decode Base64').item.json.sha\n  }\n};"
       },
       "name": "Extract Code",
       "type": "n8n-nodes-base.code",
@@ -139,31 +133,61 @@
     },
     {
       "parameters": {
-        "fileName": "/path/to/your/project/src/components/EventPage.jsx",
-        "dataPropertyName": "newCode"
+        "method": "PUT",
+        "url": "https://api.github.com/repos/YOUR_USERNAME/YOUR_REPO/contents/src/components/EventPage.jsx",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.github.v3+json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"message\": \"chore: AI-generated design update (CTR: {{ $('Extract Code').item.json.ctr }}%)\",\n  \"content\": \"{{ $('Extract Code').item.json.encodedCode }}\",\n  \"sha\": \"{{ $('Extract Code').item.json.sha }}\"\n}",
+        "options": {}
       },
-      "name": "Write New Code",
-      "type": "n8n-nodes-base.writeBinaryFile",
-      "typeVersion": 1,
-      "position": [1850, 200]
+      "name": "Update Code on GitHub",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1850, 200],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "3",
+          "name": "GitHub Token"
+        }
+      }
     },
     {
       "parameters": {
-        "command": "=cd /path/to/your/project && git config user.name \"n8n Bot\" && git config user.email \"bot@n8n.io\" && git add src/components/EventPage.jsx && git commit -m \"chore: AI-generated design update (CTR: {{ $('Extract Code').item.json.ctr }}%)\""
+        "amount": 60
       },
-      "name": "Git Commit",
-      "type": "n8n-nodes-base.executeCommand",
+      "name": "Wait for Deploy",
+      "type": "n8n-nodes-base.wait",
       "typeVersion": 1,
       "position": [2050, 200]
     },
     {
       "parameters": {
-        "command": "=cd /path/to/your/project && git push https://YOUR_GITHUB_TOKEN@github.com/YOUR_USERNAME/YOUR_REPO.git main"
+        "jsCode": "// Google PageSpeed API로 스크린샷 촬영 (무료!)\nconst siteUrl = 'YOUR_VERCEL_SITE_URL'; // 예: https://your-app.vercel.app\n\nconst apiUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(siteUrl)}&screenshot=true&category=performance`;\n\ntry {\n  const response = await fetch(apiUrl);\n  const data = await response.json();\n  \n  // Base64 스크린샷 추출 (data:image/jpeg;base64,... 형태)\n  const screenshotData = data.lighthouseResult.audits['final-screenshot'].details.data;\n  \n  // data:image/jpeg;base64, 부분 제거\n  const base64Image = screenshotData.replace(/^data:image\\/\\w+;base64,/, '');\n  \n  const filename = `screenshot_${Date.now()}.jpg`;\n  \n  return {\n    json: {\n      base64Image,\n      filename,\n      commitSha: $('Update Code on GitHub').item.json.commit.sha,\n      ctr: $('Extract Code').item.json.ctr,\n      newCode: $('Extract Code').item.json.newCode\n    }\n  };\n} catch (error) {\n  // 스크린샷 실패해도 계속 진행 (screenshot_url만 null)\n  return {\n    json: {\n      base64Image: null,\n      filename: null,\n      commitSha: $('Update Code on GitHub').item.json.commit.sha,\n      ctr: $('Extract Code').item.json.ctr,\n      newCode: $('Extract Code').item.json.newCode,\n      error: error.message\n    }\n  };\n}"
       },
-      "name": "Git Push",
-      "type": "n8n-nodes-base.executeCommand",
-      "typeVersion": 1,
+      "name": "Take Screenshot",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
       "position": [2250, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\n\n// 스크린샷이 없으면 업로드 스킵\nif (!input.base64Image) {\n  return {\n    json: {\n      publicUrl: null,\n      commitSha: input.commitSha,\n      ctr: input.ctr,\n      newCode: input.newCode\n    }\n  };\n}\n\n// Supabase 설정\nconst supabaseUrl = 'YOUR_SUPABASE_URL'; // 예: https://abcdefgh.supabase.co\nconst supabaseKey = 'YOUR_SUPABASE_SERVICE_ROLE_KEY'; // service_role 키 사용!\nconst bucketName = 'screenshots';\nconst filename = input.filename;\n\n// Base64 → Buffer\nconst imageBuffer = Buffer.from(input.base64Image, 'base64');\n\ntry {\n  // Supabase Storage에 업로드\n  const response = await fetch(\n    `${supabaseUrl}/storage/v1/object/${bucketName}/${filename}`,\n    {\n      method: 'POST',\n      headers: {\n        'Authorization': `Bearer ${supabaseKey}`,\n        'Content-Type': 'image/jpeg',\n        'x-upsert': 'true'\n      },\n      body: imageBuffer\n    }\n  );\n  \n  const result = await response.json();\n  \n  // 공개 URL 생성\n  const publicUrl = `${supabaseUrl}/storage/v1/object/public/${bucketName}/${filename}`;\n  \n  return {\n    json: {\n      publicUrl,\n      uploadResult: result,\n      commitSha: input.commitSha,\n      ctr: input.ctr,\n      newCode: input.newCode\n    }\n  };\n} catch (error) {\n  return {\n    json: {\n      publicUrl: null,\n      error: error.message,\n      commitSha: input.commitSha,\n      ctr: input.ctr,\n      newCode: input.newCode\n    }\n  };\n}"
+      },
+      "name": "Upload to Supabase Storage",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2450, 200]
     },
     {
       "parameters": {
@@ -178,19 +202,23 @@
             },
             {
               "column": "code_content",
-              "value": "={{ $('Extract Code').item.json.newCode }}"
+              "value": "={{ $json.newCode }}"
             },
             {
               "column": "design_description",
-              "value": "=AI-generated improvement for CTR {{ $('Extract Code').item.json.ctr }}%"
+              "value": "=AI-generated improvement for CTR {{ $json.ctr }}%"
             },
             {
               "column": "avg_ctr",
-              "value": "={{ parseFloat($('Extract Code').item.json.ctr) }}"
+              "value": "={{ parseFloat($json.ctr) }}"
             },
             {
               "column": "git_commit_hash",
-              "value": "={{ $('Git Commit').item.json.stdout }}"
+              "value": "={{ $json.commitSha }}"
+            },
+            {
+              "column": "screenshot_url",
+              "value": "={{ $json.publicUrl }}"
             }
           ]
         }
@@ -198,7 +226,7 @@
       "name": "Save History",
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
-      "position": [2450, 200],
+      "position": [2650, 200],
       "credentials": {
         "supabaseApi": {
           "id": "1",
@@ -245,36 +273,36 @@
       "main": [
         [
           {
-            "node": "Read Current Code",
+            "node": "Read Code from GitHub",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Read Current Code": {
+    "Read Code from GitHub": {
       "main": [
         [
           {
-            "node": "Convert to Text",
+            "node": "Decode Base64",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Convert to Text": {
+    "Decode Base64": {
       "main": [
         [
           {
-            "node": "Call Claude API",
+            "node": "Call Gemini API",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Call Claude API": {
+    "Call Gemini API": {
       "main": [
         [
           {
@@ -289,36 +317,47 @@
       "main": [
         [
           {
-            "node": "Write New Code",
+            "node": "Update Code on GitHub",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Write New Code": {
+    "Update Code on GitHub": {
       "main": [
         [
           {
-            "node": "Git Commit",
+            "node": "Wait for Deploy",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Git Commit": {
+    "Wait for Deploy": {
       "main": [
         [
           {
-            "node": "Git Push",
+            "node": "Take Screenshot",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Git Push": {
+    "Take Screenshot": {
+      "main": [
+        [
+          {
+            "node": "Upload to Supabase Storage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload to Supabase Storage": {
       "main": [
         [
           {
@@ -334,6 +373,5 @@
   "staticData": null,
   "tags": [],
   "pinData": {},
-  "versionId": "1"
+  "versionId": "3"
 }
-

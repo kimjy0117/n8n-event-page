@@ -21,7 +21,8 @@ CREATE TABLE IF NOT EXISTS code_history (
   design_description text,
   avg_ctr numeric,
   applied_at timestamp DEFAULT now(),
-  git_commit_hash text
+  git_commit_hash text,
+  screenshot_url text  -- 스크린샷 URL 저장
 );
 
 -- 인덱스 생성
@@ -45,3 +46,15 @@ INSERT INTO stats (date, visits, clicks)
 VALUES (CURRENT_DATE, 0, 0)
 ON CONFLICT (date) DO NOTHING;
 
+-- ============================================
+-- 기존 테이블에 screenshot_url 컬럼 추가 (이미 테이블이 있는 경우)
+-- ============================================
+-- ALTER TABLE code_history ADD COLUMN IF NOT EXISTS screenshot_url text;
+
+-- ============================================
+-- Supabase Storage 버킷 생성 (Dashboard에서 수동으로 해야 함)
+-- ============================================
+-- 1. Supabase Dashboard > Storage 메뉴
+-- 2. "New bucket" 클릭
+-- 3. Name: screenshots, Public bucket: 체크
+-- 4. "Create bucket" 클릭

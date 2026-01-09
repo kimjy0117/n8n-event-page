@@ -1,0 +1,535 @@
+{
+  "name": "AI Design Optimizer",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [
+        11216,
+        4360
+      ],
+      "id": "66a6c442-a97e-444f-92a8-ef46b91166d6"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "stats",
+        "limit": 1,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "date",
+              "condition": "eq",
+              "keyValue": "={{ $today.minus({days: 1}).toFormat('yyyy-MM-dd') }}"
+            }
+          ]
+        }
+      },
+      "name": "Get Yesterday Stats",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        11440,
+        4360
+      ],
+      "id": "178f8062-f98e-4762-a2dc-15c8b39f9148",
+      "credentials": {
+        "supabaseApi": {
+          "id": "axoj1CUxnThkR4dG",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 어제 통계 가져오기\nconst stats = $input.first().json;\n\n// CTR 계산\nconst visits = stats.visits || 0;\nconst clicks = stats.clicks || 0;\nconst ctr = visits > 0 ? (clicks / visits * 100) : 0;\n\n// 임계값 설정 (5%)\nconst threshold = 50;\nconst needsImprovement = ctr < threshold;\n\n// 결과 반환\nreturn {\n  json: {\n    date: stats.date,\n    visits,\n    clicks,\n    ctr: ctr.toFixed(2),\n    threshold,\n    needsImprovement,\n    stats\n  }\n};"
+      },
+      "name": "Calculate CTR",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        11664,
+        4360
+      ],
+      "id": "ffa3f194-a587-450a-9be9-da51fe9aa136"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.needsImprovement }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "name": "IF CTR Low",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        11888,
+        4360
+      ],
+      "id": "a1a2ca7d-9f6b-45a0-8f14-9f0879382711"
+    },
+    {
+      "parameters": {
+        "url": "https://api.github.com/repos/kimjy0117/n8n-event-page/contents/src/components/EventPage.jsx",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.github.v3+json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Read Code from GitHub",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        12112,
+        4360
+      ],
+      "id": "9bda8d93-cad5-4e23-9335-15e38f097525",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "4n7jhiYB7JktISKK",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// GitHub API는 파일 내용을 Base64로 반환\nconst response = $input.first().json;\nconst content = Buffer.from(response.content, 'base64').toString('utf-8');\nconst sha = response.sha;\n\nreturn {\n  json: {\n    content: content,\n    sha: sha,\n    path: response.path\n  }\n};"
+      },
+      "name": "Decode Base64",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        12336,
+        4360
+      ],
+      "id": "4e3c7c63-9f7b-4ca0-af24-70b7b2b170cf"
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.first().json;\n\nlet newCode = '';\n\n// output 필드 우선\nif (response.output) {\n  newCode = response.output;\n} else if (response.choices && response.choices[0]) {\n  newCode = response.choices[0].message.content;\n} else if (response.candidates && response.candidates[0]) {\n  newCode = response.candidates[0].content.parts[0].text;\n}\n\nif (!newCode) {\n  throw new Error('AI 응답에서 코드를 찾을 수 없습니다.');\n}\n\n// ✅ 마크다운 코드 블록 제거\nnewCode = newCode\n  .replace(/```[\\s\\S]*?\\n/, '')  // ```jsx 같은 시작 라인 제거\n  .replace(/```$/g, '')          // 마지막 ``` 제거\n  .trim();\n\n// ✅ 코드 뒤 설명 제거\nconst explanationMarkers = ['\\n---\\n', '\\n###'];\nfor (const marker of explanationMarkers) {\n  const idx = newCode.indexOf(marker);\n  if (idx > -1) {\n    newCode = newCode.substring(0, idx).trim();\n    break;\n  }\n}\n\n// ✅ import 이전 텍스트 제거\nconst importIndex = newCode.indexOf('import');\nif (importIndex > 0) {\n  newCode = newCode.substring(importIndex);\n}\n\n// ✅ 안전 검증\nif (newCode.length < 100) {\n  throw new Error(`생성된 코드가 너무 짧습니다 (${newCode.length}자).`);\n}\nif (!newCode.includes('useStats')) {\n  throw new Error('useStats 훅이 누락되었습니다.');\n}\nif (!newCode.includes('recordClick')) {\n  throw new Error('recordClick 함수가 누락되었습니다.');\n}\nif (!newCode.includes('export default')) {\n  throw new Error('export default 문이 누락되었습니다.');\n}\n\nconst encodedCode = Buffer.from(newCode).toString('base64');\n\nreturn {\n  json: {\n    newCode,\n    encodedCode,\n    ctr: $('IF CTR Low').item.json.ctr,\n    date: $('IF CTR Low').item.json.date,\n    sha: $('Decode Base64').item.json.sha\n  }\n};\n"
+      },
+      "name": "Extract Code",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        12912,
+        4360
+      ],
+      "id": "d415cc1a-3635-441a-bd02-c7a45863a0fe"
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "https://api.github.com/repos/kimjy0117/n8n-event-page/contents/src/components/EventPage.jsx",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.github.v3+json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"message\": \"chore: AI-generated design update (CTR: {{ $('Extract Code').item.json.ctr }}%)\",\n  \"content\": \"{{ $('Extract Code').item.json.encodedCode }}\",\n  \"sha\": \"{{ $('Extract Code').item.json.sha }}\"\n}",
+        "options": {}
+      },
+      "name": "Update Code on GitHub",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        13136,
+        4360
+      ],
+      "id": "92167ddb-49dd-4012-b8fe-33191dfe1e1b",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "4n7jhiYB7JktISKK",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 5,
+        "unit": "minutes"
+      },
+      "name": "Wait for Deploy",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [
+        13360,
+        4360
+      ],
+      "id": "8eaa309d-bc3c-4c00-bd8e-381353035a29",
+      "webhookId": "946a5058-bb8d-451e-a616-3da57ab55459"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Google PageSpeed API로 스크린샷 촬영 (무료!)\nconst siteUrl = 'https://n8n-event-page.vercel.app/'; \n\nconst apiUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(siteUrl)}&screenshot=true&category=performance`;\n\ntry {\n  const response = await fetch(apiUrl);\n  const data = await response.json();\n  \n  // Base64 스크린샷 추출 (data:image/jpeg;base64,... 형태)\n  const screenshotData = data.lighthouseResult.audits['final-screenshot'].details.data;\n  \n  // data:image/jpeg;base64, 부분 제거\n  const base64Image = screenshotData.replace(/^data:image\\/\\w+;base64,/, '');\n  \n  const filename = `screenshot_${Date.now()}.jpg`;\n  \n  return {\n    json: {\n      base64Image,\n      filename,\n      commitSha: $('Update Code on GitHub').item.json.commit.sha,\n      ctr: $('Extract Code').item.json.ctr,\n      newCode: $('Extract Code').item.json.newCode\n    }\n  };\n} catch (error) {\n  // 스크린샷 실패해도 계속 진행 (screenshot_url만 null)\n  return {\n    json: {\n      base64Image: null,\n      filename: null,\n      commitSha: $('Update Code on GitHub').item.json.commit.sha,\n      ctr: $('Extract Code').item.json.ctr,\n      newCode: $('Extract Code').item.json.newCode,\n      error: error.message\n    }\n  };\n}"
+      },
+      "name": "Take Screenshot",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        11824,
+        3936
+      ],
+      "id": "1f1f77fc-b90e-462d-a0e4-b96b382175b5"
+    },
+    {
+      "parameters": {
+        "jsCode": "const binaryData = $input.first().binary.data;\nconst filename = `screenshot_${Date.now()}.png`;\n\nconst supabaseUrl = 'https://hkffaswhaztfwvbogmeu.supabase.co';\nconst supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhrZmZhc3doYXp0Znd2Ym9nbWV1Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2Nzg0Njg1NSwiZXhwIjoyMDgzNDIyODU1fQ.Ma9MatH_hn026YQDuhN1UooV6pg4F5iu-4ZtvMBwfuM';\nconst bucketName = 'screenshots';\n\nif (!binaryData) {\n  return {\n    json: {\n      publicUrl: null,\n      error: 'No binary data found',\n      commitSha: $('Update Code on GitHub').item.json.commit.sha,\n      ctr: $('Extract Code').item.json.ctr,\n      newCode: $('Extract Code').item.json.newCode\n    }\n  };\n}\n\nconst imageBuffer = await this.helpers.getBinaryDataBuffer(0, 'data');\n\ntry {\n  const response = await fetch(\n    `${supabaseUrl}/storage/v1/object/${bucketName}/${filename}`,\n    {\n      method: 'POST',\n      headers: {\n        'Authorization': `Bearer ${supabaseKey}`,\n        'Content-Type': 'image/png',\n        'x-upsert': 'true'\n      },\n      body: imageBuffer\n    }\n  );\n  \n  const result = await response.json();\n  const publicUrl = `${supabaseUrl}/storage/v1/object/public/${bucketName}/${filename}`;\n  \n  return {\n    json: {\n      publicUrl,\n      uploadResult: result,\n      commitSha: $('Update Code on GitHub').item.json.commit.sha,\n      ctr: $('Extract Code').item.json.ctr,\n      newCode: $('Extract Code').item.json.newCode\n    }\n  };\n} catch (error) {\n  return {\n    json: {\n      publicUrl: null,\n      error: error.message,\n      commitSha: $('Update Code on GitHub').item.json.commit.sha,\n      ctr: $('Extract Code').item.json.ctr,\n      newCode: $('Extract Code').item.json.newCode\n    }\n  };\n}"
+      },
+      "name": "Upload to Supabase Storage",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        11520,
+        3856
+      ],
+      "id": "cdc83014-f378-4c94-8c76-849902708e16"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Current code with CTR {{ $('IF CTR Low').item.json.ctr }}%:\n\n{{ $('Decode Base64').item.json.content }}\n\nGenerate an improved version with better button colors, sizes, text, positioning, and layout to increase conversion rate.",
+        "options": {
+          "systemMessage": "You are a UX/UI expert. Analyze the provided React event page code and improve it to increase CTR. Maintain the useStats hook and Supabase integration logic. Return only the complete JSX code without markdown code blocks or explanations."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        12560,
+        4360
+      ],
+      "id": "4b0a01ae-935a-46c3-8d82-be4471b43858",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        12632,
+        4584
+      ],
+      "id": "eada5405-082a-41c5-ac76-132b5c295989",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "5vsB1z8JKV2dHBPd",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://api.screenshotone.com/take",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "url",
+              "value": "https://n8n-event-page.vercel.app"
+            },
+            {
+              "name": "access_key",
+              "value": "nYg_OR_LCrdl5Q"
+            },
+            {
+              "name": "full_page",
+              "value": "true"
+            },
+            {
+              "name": "format",
+              "value": "png"
+            },
+            {
+              "name": "response_type",
+              "value": "by_format"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        13584,
+        4360
+      ],
+      "id": "f93ed0dd-7200-4845-a0c5-6b0dc684c9cf",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.item.json;\nconst screenshotData = data.lighthouseResult.audits['final-screenshot'].details.data;\nconst base64Image = screenshotData.replace(/^data:image\\/\\w+;base64,/, '');\nconst filename = `screenshot_${Date.now()}.jpg`;\n\nreturn {\n  json: {\n    base64Image,\n    filename,\n    commitSha: $('Update Code on GitHub').item.json.commit.sha,\n    ctr: $('Extract Code').item.json.ctr,\n    newCode: $('Extract Code').item.json.newCode\n  }\n};"
+      },
+      "name": "Take Screenshot1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        11216,
+        3872
+      ],
+      "id": "8671f43f-4d9a-45d8-8198-a9a13df6571b"
+    },
+    {
+      "parameters": {
+        "tableId": "screenshots",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "file_name",
+              "fieldValue": "={{ 'screenshot_' + $now.toFormat('yyyyMMdd_HHmmss') + '.png' }}"
+            },
+            {
+              "fieldId": "binary_data",
+              "fieldValue": "={{ $binary.data }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        13808,
+        4360
+      ],
+      "id": "9fcbdf7d-1717-46b2-a850-6f61684d86f0",
+      "name": "Supabase",
+      "alwaysOutputData": false,
+      "credentials": {
+        "supabaseApi": {
+          "id": "axoj1CUxnThkR4dG",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://hkffaswhaztfwvbogmeu.supabase.co/storage/v1/object/screenshots/screenshot_{{ $now.toFormat('yyyyMMdd_HHmmss') }}.png",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "image/png",
+        "body": "={{ $binary.data }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        14032,
+        4360
+      ],
+      "id": "5328e437-3fb0-4448-aa08-b7bf74350fec",
+      "name": "HTTP Request1",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "4n7jhiYB7JktISKK",
+          "name": "Header Auth account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Yesterday Stats",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Yesterday Stats": {
+      "main": [
+        [
+          {
+            "node": "Calculate CTR",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate CTR": {
+      "main": [
+        [
+          {
+            "node": "IF CTR Low",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF CTR Low": {
+      "main": [
+        [
+          {
+            "node": "Read Code from GitHub",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Code from GitHub": {
+      "main": [
+        [
+          {
+            "node": "Decode Base64",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Decode Base64": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Code": {
+      "main": [
+        [
+          {
+            "node": "Update Code on GitHub",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Code on GitHub": {
+      "main": [
+        [
+          {
+            "node": "Wait for Deploy",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Extract Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait for Deploy": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "258e1268-7adf-4e94-a8d7-434c5fd0df35",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0e11240ca589094c58f77e7a45d942dfbc68a4605a53b022bd2ac90d6a36a895"
+  },
+  "id": "adi864ihU1U5GZIl1innm",
+  "tags": []
+}

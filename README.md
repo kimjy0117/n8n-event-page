@@ -5,92 +5,37 @@ n8n과 Claude AI를 활용하여 CTR(클릭률)이 낮을 때 자동으로 디�
 ## 🎯 주요 기능
 
 - **자동 통계 수집**: 페이지 방문수와 버튼 클릭수를 Supabase에 자동 기록
+- **코드 버전별 통계 관리**: AI가 새 코드를 생성할 때마다 별도의 통계 row 생성하여 버전별 성과 추적
 - **AI 기반 디자인 개선**: CTR이 낮으면 Claude API가 새로운 디자인 코드 생성
 - **자동 배포**: n8n이 Git에 커밋/푸시하여 Vercel에서 자동 재배포
 
-## 📋 사전 준비사항
-
-### 1. Supabase 설정
-
-1. [Supabase](https://supabase.com)에서 프로젝트 생성
-2. SQL Editor에서 `supabase-setup.sql` 실행
-3. Project Settings > API에서 URL과 Anon Key 복사
-
-### 2. 환경 변수 설정
-
-`.env` 파일에 Supabase 정보 입력:
+## 🚀 Quick Start
 
 ```bash
-VITE_SUPABASE_URL=https://your-project-id.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-key-here
-```
-
-### 3. GitHub 레포 생성
-
-```bash
-# GitHub에서 새 레포 생성 후
-git remote add origin https://github.com/YOUR_USERNAME/n8n-event-page.git
-git add .
-git commit -m "Initial commit: AI-powered event page"
-git push -u origin main
-```
-
-### 4. Vercel 배포
-
-1. [Vercel](https://vercel.com)에 로그인
-2. GitHub 레포 연결
-3. Framework Preset: **Vite**
-4. Environment Variables에 Supabase 정보 추가:
-   - `VITE_SUPABASE_URL`
-   - `VITE_SUPABASE_ANON_KEY`
-5. Deploy 클릭
-
-### 5. Claude API Key 발급
-
-1. [Anthropic Console](https://console.anthropic.com/)에서 API Key 발급
-2. n8n에서 사용할 예정
-
-### 6. GitHub Personal Access Token
-
-1. GitHub Settings > Developer settings > Personal access tokens > Tokens (classic)
-2. Generate new token (classic)
-3. 권한: `repo` 전체 선택
-4. n8n에서 Git 푸시 시 사용
-
-## 🚀 로컬 실행
-
-```bash
-# 패키지 설치
+# 1. 패키지 설치
 npm install
 
-# 개발 서버 실행
+# 2. 환경 변수 설정 (.env 파일 생성)
+VITE_SUPABASE_URL=your-supabase-url
+VITE_SUPABASE_ANON_KEY=your-anon-key
+
+# 3. 개발 서버 실행
 npm run dev
 ```
 
-## 🤖 n8n 워크플로우 설정
+## 📚 상세 문서
 
-자세한 설정 방법은 `n8n-workflow-guide.md`를 참고하세요.
+프로젝트의 상세한 설정 및 사용 방법은 로컬의 `docs/` 폴더를 참고하세요:
 
-### 워크플로우 개요
+- **docs/QUICK-START.md** - 빠른 시작 가이드
+- **docs/SETUP-GUIDE.md** - 전체 설정 가이드 (Supabase, Vercel, n8n)
+- **docs/n8n-workflow-guide.md** - n8n 워크플로우 상세 설정
+- **docs/PROJECT-SUMMARY.md** - 프로젝트 개요 및 아키텍처
 
-1. **매일 오전 9시** 자동 실행
-2. 어제 통계 조회 (Supabase)
-3. CTR 계산 (클릭수 / 방문수 × 100)
-4. **CTR < 5%** 이면:
-   - 현재 `EventPage.jsx` 코드 읽기
-   - Claude API로 개선된 코드 생성
-   - 새 코드로 파일 교체
-   - Git 커밋 & 푸시
-   - Vercel 자동 재배포
-
-## 📊 통계 확인
-
-Supabase Dashboard > Table Editor > stats 테이블에서 일별 통계 확인 가능:
-
-- `date`: 날짜
-- `visits`: 방문수
-- `clicks`: 클릭수
-- `ctr`: 클릭률 (자동 계산)
+설정 파일은 `configs/` 폴더에 있습니다:
+- **configs/supabase-setup.sql** - 데이터베이스 초기 설정
+- **configs/supabase-migration.sql** - 기존 DB 마이그레이션
+- **configs/n8n-workflow.json** - n8n 워크플로우 템플릿
 
 ## 🔧 기술 스택
 
@@ -99,7 +44,14 @@ Supabase Dashboard > Table Editor > stats 테이블에서 일별 통계 확인 �
 - **Automation**: n8n
 - **AI**: Claude 3.5 Sonnet
 - **Deployment**: Vercel
-- **Version Control**: Git + GitHub
+
+## 📊 작동 방식
+
+1. **매일 오전 9시** n8n이 자동 실행
+2. 어제 통계 조회 및 CTR 계산
+3. **CTR < 5%** 이면 Claude API로 새 디자인 생성
+4. Git 커밋/푸시 → Vercel 자동 배포
+5. 코드 버전별로 독립적인 통계 추적
 
 ## 📝 라이선스
 

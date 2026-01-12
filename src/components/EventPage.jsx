@@ -1,6 +1,21 @@
+/**
+ * IMPORTANT FOR AI CODE GENERATION:
+ * 
+ * ⚠️ DO NOT CHANGE IMPORT PATHS - Keep these exact paths:
+ * - useStats MUST be imported from: '../hooks/useStats'
+ * - supabase MUST be imported from: '../lib/supabase' (if needed)
+ * 
+ * File structure:
+ * - This file: src/components/EventPage.jsx
+ * - useStats hook: src/hooks/useStats.js
+ * - supabase client: src/lib/supabase.js
+ * 
+ * Common mistake: Using './useStats' or './supabaseClient' will cause build errors
+ * Correct: Always use '../hooks/useStats' and '../lib/supabase'
+ */
+
 import { useEffect } from 'react';
-import { useStats } from './useStats';
-import { supabase } from './supabaseClient';
+import { useStats } from '../hooks/useStats';
 
 const EventPage = () => {
   const { clicks, recordClick } = useStats();

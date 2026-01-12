@@ -1,77 +1,47 @@
-/**
- * IMPORTANT FOR AI CODE GENERATION:
- * 
- * ⚠️ DO NOT CHANGE IMPORT PATHS - Keep these exact paths:
- * - useStats MUST be imported from: '../hooks/useStats'
- * - supabase MUST be imported from: '../lib/supabase' (if needed)
- * 
- * File structure:
- * - This file: src/components/EventPage.jsx
- * - useStats hook: src/hooks/useStats.js
- * - supabase client: src/lib/supabase.js
- * 
- * Common mistake: Using './useStats' or './supabaseClient' will cause build errors
- * Correct: Always use '../hooks/useStats' and '../lib/supabase'
- */
-
 import { useEffect } from 'react';
 import { useStats } from '../hooks/useStats';
 
 const EventPage = () => {
-  const { clicks, recordClick } = useStats();
+    const { recordClick } = useStats();
 
-  useEffect(() => {
-    const handleClick = () => {
-      recordClick();
-      // Additional tracking logic here
-    };
+    useEffect(() => {
+        // Some effect here
+    }, []);
 
-    const button = document.getElementById('cta-button');
-    if (button) {
-      button.addEventListener('click', handleClick);
-    }
-
-    return () => {
-      if (button) {
-        button.removeEventListener('click', handleClick);
-      }
-    };
-  }, [recordClick]);
-
-  return (
-    <div style={{ padding: '20px', textAlign: 'center', maxWidth: '800px', margin: '0 auto' }}>
-      <h1 style={{ fontSize: '2.5em', margin: '20px 0' }}>Join Our Exclusive Event!</h1>
-      <p style={{ fontSize: '1.2em', lineHeight: '1.5', margin: '20px 0' }}>
-        Don't miss out on this opportunity to connect with industry leaders and gain insights into the latest trends!
-      </p>
-      <button
-        id="cta-button"
-        style={{
-          backgroundColor: '#ff5722',
-          color: 'white',
-          fontSize: '1.5em',
-          padding: '15px 30px',
-          border: 'none',
-          borderRadius: '5px',
-          cursor: 'pointer',
-          marginTop: '20px',
-          transition: 'background-color 0.3s',
-        }}
-        onMouseOver={(e) => { e.target.style.backgroundColor = '#e64a19'; }}
-        onMouseOut={(e) => { e.target.style.backgroundColor = '#ff5722'; }}
-      >
-        Reserve Your Spot Now!
-      </button>
-      <p style={{ margin: '20px 0', fontSize: '1em', color: '#555' }}>
-        Limited spots available! Act fast!
-      </p>
-      <div style={{ marginTop: '40px' }}>
-        <h2 style={{ fontSize: '2em' }}>See What Others Are Saying:</h2>
-        <p style={{ fontStyle: 'italic', margin: '15px 0' }}>“This event changed my career!”</p>
-        <p style={{ fontStyle: 'italic', margin: '15px 0' }}>“A must-attend for anyone in the industry!”</p>
-      </div>
-    </div>
-  );
+    return (
+        <div className="event-page-container">
+            <header className="event-header">
+                <h1 className="event-title">Join Our Exclusive Event!</h1>
+                <p className="event-date">Date: November 15, 2023</p>
+            </header>
+            <main className="event-details">
+                <p className="event-description">Don't miss out on the chance to enhance your skills and network with industry leaders.</p>
+                <button 
+                    className="cta-button"
+                    style={{
+                        backgroundColor: '#FF5733', // High-contrast color
+                        color: '#FFFFFF',
+                        padding: '15px 30px',
+                        fontSize: '18px',
+                        borderRadius: '5px',
+                        border: 'none',
+                        cursor: 'pointer',
+                        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
+                        marginTop: '20px'
+                    }}
+                    onClick={() => {
+                        recordClick(); 
+                        // handle click event
+                    }}
+                >
+                    Sign Up Now! Limited Spots Available!
+                </button>
+            </main>
+            <footer className="event-footer">
+                <p className="social-proof">Over 1,000 attendees last year!</p>
+            </footer>
+        </div>
+    );
 };
 
 export default EventPage;

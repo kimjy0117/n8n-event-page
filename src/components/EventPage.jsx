@@ -1,97 +1,57 @@
-import { useStats } from '../hooks/useStats'
-import '../styles/event.css'
+import React from 'react';
+import { useStats } from './useStats';
+import { supabase } from './supabaseClient';
 
-/**
- * 이벤트 페이지 컴포넌트
- * 
- * ⚠️ AI 자동 수정 대상 파일 ⚠️
- * n8n 워크플로우가 CTR이 낮을 때 이 파일을 자동으로 수정합니다.
- * 
- * 수정 가능 영역:
- * - 레이아웃 구조
- * - 버튼 스타일, 위치, 크기
- * - 버튼 문구
- * - 색상, 폰트, 애니메이션
- * 
- * 유지해야 할 것:
- * - useStats 훅 사용
- * - recordClick 호출
- * - 기본 React 구조
- */
-function EventPage() {
-  const { recordClick } = useStats()
+const EventPage = () => {
+  const { clicks, recordClick } = useStats();
 
-  const handleButtonClick = () => {
-    recordClick()
-    // 추가 액션 (예: 모달 열기, 페이지 이동 등)
-    alert('이벤트 참여 감사합니다! 🎉')
-  }
+  const handleClick = async () => {
+    await recordClick();
+    // logic to handle click goes here
+  };
 
   return (
-    <div className="event-container">
-      {/* === AI 수정 가능 영역 시작 === */}
-      
-      <div className="hero-section"
-        <h1 className="hero-title" style={{ fontSize: '2.8rem', fontWeight: '700', color: '#d32f2f', marginBottom: '15px', textShadow: '1px 1px 5px rgba(255, 0, 0, 0.3)' }}>
-          🎉 특별 이벤트!!
-        </h1>
-        <p className="hero-description" style={{ fontSize: '1.3rem', color: '#555', lineHeight: '1.5', marginBottom: '30px' }}>
-          참여하시면 <strong style={{ color: '#d32f2f' }}>즉시 할인 쿠폰</strong>과 특별 선물이 기다립니다! <br />
-          놓치지 마세요!
-        </p>
-        
-        <button 
-          className="cta-button"
-          onClick={handleButtonClick}
-          style={{
-            backgroundColor: '#ff9800',
-            color: '#fff',
-            fontSize: '1.8rem',
-            fontWeight: 'bold',
-            padding: '16px 0',
-            width: '100%',
-            borderRadius: '50px',
-            border: 'none',
-            boxShadow: '0 12px 30px rgba(255, 152, 0, 0.3)',
-            cursor: 'pointer',
-            transition: 'background-color 0.3s, transform 0.3s, box-shadow 0.3s',
-            marginBottom: '25px',
-            userSelect: 'none',
-          }}
-          onMouseEnter={e => {
-            e.currentTarget.style.backgroundColor = '#fb8c00';
-            e.currentTarget.style.transform = 'scale(1.05)';
-            e.currentTarget.style.boxShadow = '0 15px 30px rgba(255, 152, 0, 0.6)';
-          }}
-          onMouseLeave={e => {
-            e.currentTarget.style.backgroundColor = '#ff9800';
-            e.currentTarget.style.transform = 'scale(1)';
-            e.currentTarget.style.boxShadow = '0 12px 30px rgba(255, 152, 0, 0.3)';
-          }}
-          aria-label="이벤트 참여하기 버튼"
-        >
-          🎁 <strong>특별 선물 받기!</strong> 지금 참여하세요!
-        </button>
+    <div className="event-page" style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
+      <header style={{ textAlign: 'center', marginBottom: '30px' }}>
+        <h1 style={{ fontSize: '2.5rem', fontWeight: 'bold' }}>Join Our Exclusive Event!</h1>
+        <p style={{ fontSize: '1.2rem', color: '#555' }}>Limited Spots Available - Act Quickly!</p>
+      </header>
 
-        <div className="features" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px', paddingTop: '20px' }}>
-          <div className="feature-item" style={{ background: '#e8f5e9', borderRadius: '12px', padding: '20px', boxShadow: '0 4px 30px rgba(76, 175, 80, 0.1)', transition: 'transform 0.3s', cursor: 'pointer' }} onMouseEnter={e => (e.currentTarget.style.transform = 'translateY(-5px)')} onMouseLeave={e => (e.currentTarget.style.transform = 'translateY(0)')}>
-            <span className="feature-icon" style={{ fontSize: '3rem', color: '#4caf50' }}>⚡</span>
-            <p style={{ marginTop: '10px', fontWeight: '600', color:'#4caf50' }}>간편한 신청</p>
-          </div>
-          <div className="feature-item" style={{ background: '#e8f5e9', borderRadius: '12px', padding: '20px', boxShadow: '0 4px 30px rgba(76, 175, 80, 0.1)', transition: 'transform 0.3s', cursor: 'pointer' }} onMouseEnter={e => (e.currentTarget.style.transform = 'translateY(-5px)')} onMouseLeave={e => (e.currentTarget.style.transform = 'translateY(0)')}>
-            <span className="feature-icon" style={{ fontSize: '3rem', color: '#4caf50' }}>🎯</span>
-            <p style={{ marginTop: '10px', fontWeight: '600', color:'#4caf50' }}>개인 맞춤 혜택</p>
-          </div>
-          <div className="feature-item" style={{ background: '#e8f5e9', borderRadius: '12px', padding: '20px', boxShadow: '0 4px 30px rgba(76, 175, 80, 0.1)', transition: 'transform 0.3s', cursor: 'pointer' }} onMouseEnter={e => (e.currentTarget.style.transform = 'translateY(-5px)')} onMouseLeave={e => (e.currentTarget.style.transform = 'translateY(0)')}>
-            <span className="feature-icon" style={{ fontSize: '3rem', color: '#4caf50' }}>💯</span>
-            <p style={{ marginTop: '10px', fontWeight: '600', color:'#4caf50' }}>만족 보장</p>
-          </div>
-        </div>
+      <section style={{ marginBottom: '40px' }}>
+        <h2 style={{ fontSize: '2rem', marginBottom: '10px' }}>What You'll Learn</h2>
+        <ul style={{ listStyleType: 'none', padding: 0 }}>
+          <li style={{ margin: '10px 0' }}>🔥 Insightful strategies to boost your skills</li>
+          <li style={{ margin: '10px 0' }}>🤝 Networking opportunities with industry leaders</li>
+          <li style={{ margin: '10px 0' }}>🎁 Exclusive resources for participants</li>
+        </ul>
+      </section>
+
+      <div style={{ textAlign: 'center', margin: '40px 0' }}>
+        <button 
+          onClick={handleClick} 
+          style={{ 
+            backgroundColor: '#ff5733', 
+            color: '#fff', 
+            padding: '15px 30px', 
+            fontSize: '1.5rem', 
+            border: 'none', 
+            borderRadius: '5px', 
+            cursor: 'pointer', 
+            transition: 'background-color 0.3s'
+          }}
+          onMouseOver={() => (document.body.style.backgroundColor = '#ff4d00')}
+          onMouseOut={() => (document.body.style.backgroundColor = '#ff5733')}
+        >
+          Reserve Your Spot NOW!
+        </button>
       </div>
 
-      {/* === AI 수정 가능 영역 끝 === */}
+      <footer style={{ textAlign: 'center', marginTop: '30px', fontSize: '1rem', color: '#777' }}>
+        <p>📅 Date: Next Friday | 🕒 Time: 2 PM - 5 PM</p>
+        <p>✅ Join 100+ participants who have benefitted from our events!</p>
+      </footer>
     </div>
-  )
-}
+  );
+};
 
-export default EventPage
+export default EventPage;

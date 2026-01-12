@@ -9,41 +9,43 @@ const EventPage = () => {
     }, []);
 
     return (
-        <div className="event-page-container" style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
+        <div className="event-page-container" style={{ padding: '20px', maxWidth: '900px', margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <header className="event-header" style={{ textAlign: 'center', marginBottom: '40px' }}>
-                <h1 className="event-title" style={{ fontSize: '2.5em', color: '#333' }}>Join Our Exclusive Event!</h1>
-                <p className="event-date" style={{ fontSize: '1.2em', color: '#555' }}>Date: November 15, 2023</p>
+                <h1 className="event-title" style={{ fontSize: '2.8em', color: '#2C3E50' }}>🚀 Transform Your Skills at Our Exclusive Event!</h1>
+                <p className="event-date" style={{ fontSize: '1.5em', fontWeight: 'bold', color: '#34495E' }}>📅 Date: November 15, 2023</p>
             </header>
             <main className="event-details" style={{ padding: '20px', textAlign: 'center' }}>
-                <p className="event-description" style={{ fontSize: '1.1em', color: '#666', marginBottom: '30px' }}>
-                    Don't miss out on the chance to enhance your skills and network with industry leaders.
+                <p className="event-description" style={{ fontSize: '1.3em', color: '#7f8c8d', marginBottom: '40px' }}>
+                    Don't miss this opportunity to enhance your skills and network with industry leaders. 
+                    <br />
+                    <strong>Only a few spots left!</strong>
                 </p>
                 <button 
                     className="cta-button"
                     style={{
-                        backgroundColor: '#28a745', // High-contrast and action-oriented color
+                        backgroundColor: '#e74c3c', // High-contrast and action-oriented color
                         color: '#FFFFFF',
-                        padding: '20px 40px', // Increased button size
-                        fontSize: '20px', // Larger font size
-                        borderRadius: '8px',
+                        padding: '25px 50px', // Increased button size
+                        fontSize: '22px', // Larger font size
+                        borderRadius: '12px',
                         border: 'none',
                         cursor: 'pointer',
-                        boxShadow: '0 6px 12px rgba(0, 0, 0, 0.3)',
-                        marginTop: '20px',
+                        boxShadow: '0 8px 16px rgba(0, 0, 0, 0.4)',
+                        marginTop: '30px',
                         transition: 'background-color 0.3s, transform 0.3s',
                     }}
                     onClick={() => {
                         recordClick(); 
                         // handle click event
                     }}
-                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#218838'} // darker on hover
-                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#28a745'} // original color
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#c0392b'} // darker on hover
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#e74c3c'} // original color
                 >
-                    🎟️ Sign Up Now! Only a Few Spots Left!
+                    🔥 Claim Your Spot Now! Limited Availability!
                 </button>
             </main>
-            <footer className="event-footer" style={{ textAlign: 'center', marginTop: '40px', fontSize: '1em', color: '#999' }}>
-                <p className="social-proof">Join over 1,000 attendees from last year!</p>
+            <footer className="event-footer" style={{ textAlign: 'center', marginTop: '50px', fontSize: '1em', color: '#999' }}>
+                <p className="social-proof" style={{ fontSize: '1.2em', color: '#27ae60' }}>Join over 1,000 satisfied attendees from last year!</p>
             </footer>
         </div>
     );

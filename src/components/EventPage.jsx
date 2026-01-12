@@ -18,16 +18,16 @@ const EventPage = () => {
                 <p className="event-description" style={{ fontSize: '1.4em', color: '#7f8c8d', marginBottom: '40px' }}>
                     Don't miss your chance to elevate your skills and connect with industry leaders. 
                     <br />
-                    <strong style={{ color: '#e74c3c' }}>Hurry, only a few spots left!</strong>
+                    <strong style={{ color: '#e74c3c', fontSize: '1.6em' }}>Hurry, only a few spots left!</strong>
                 </p>
                 <button 
                     className="cta-button"
                     style={{
-                        backgroundColor: '#ff5733', // More compelling color
+                        backgroundColor: '#28a745', // High-contrast, action-oriented color
                         color: '#FFFFFF',
-                        padding: '25px 60px', // Increased button size
-                        fontSize: '30px', // Larger font size
-                        borderRadius: '40px',
+                        padding: '20px 50px', // Maintained large button size
+                        fontSize: '24px', // Clear and large font size
+                        borderRadius: '50px',
                         border: 'none',
                         cursor: 'pointer',
                         boxShadow: '0 12px 24px rgba(0, 0, 0, 0.5)',
@@ -43,19 +43,19 @@ const EventPage = () => {
                         // handle click event
                     }}
                     onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = '#c0392b'; // darker on hover
+                        e.currentTarget.style.backgroundColor = '#218838'; // darker on hover
                         e.currentTarget.style.transform = 'scale(1.05)'; // scale effect on hover
                     }}
                     onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = '#ff5733'; // original color
+                        e.currentTarget.style.backgroundColor = '#28a745'; // original color
                         e.currentTarget.style.transform = 'scale(1)'; // reset scale
                     }}
                 >
-                    🔥 Grab Your Spot Now! Limited Availability!
+                    🔥 Claim Your Spot Now! Only a Few Left!
                 </button>
             </main>
             <footer className="event-footer" style={{ textAlign: 'center', marginTop: '30px', fontSize: '1em', color: '#999' }}>
-                <p className="social-proof" style={{ fontSize: '1.3em', color: '#27ae60', marginTop: '20px' }}>Join over 1,000 satisfied attendees from last year!</p>
+                <p className="social-proof" style={{ fontSize: '1.5em', color: '#27ae60', marginTop: '20px' }}>Join over 1,000 satisfied attendees from last year!</p>
             </footer>
         </div>
     );

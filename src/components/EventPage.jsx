@@ -33,7 +33,7 @@ function EventPage() {
       
       <div className="hero-section">
         <h1 className="hero-title" style={{ fontSize: '2.8rem', fontWeight: '700', color: '#d32f2f', marginBottom: '15px', textShadow: '1px 1px 5px rgba(255, 0, 0, 0.3)' }}>
-          🎉 특별 이벤트!
+          🎉 특별 이벤트!!
         </h1>
         <p className="hero-description" style={{ fontSize: '1.3rem', color: '#555', lineHeight: '1.5', marginBottom: '30px' }}>
           참여하시면 <strong style={{ color: '#d32f2f' }}>즉시 할인 쿠폰</strong>과 특별 선물이 기다립니다! <br />

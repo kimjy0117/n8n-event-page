@@ -1,48 +1,45 @@
-import React from 'react';
-import { useStats } from './useStats';
-import { supabase } from './supabaseClient';
+import { useEffect } from 'react';
+import { useStats } from '../hooks/useStats';
 
 const EventPage = () => {
-    const { stats } = useStats();
+    const { recordClick } = useStats();
 
-    const recordClick = async () => {
-        // Logic to record the click event
-        await supabase
-            .from('clicks')
-            .insert([{ event_id: 1 }]);
-    };
+    useEffect(() => {
+        // Some effect here
+    }, []);
 
     return (
-        <div className="event-page" style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto' }}>
-            <h1 style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>Join Our Exclusive Event!</h1>
-            <p style={{ fontSize: '1.2rem', marginBottom: '2rem' }}>
-                Don’t miss out on this unique opportunity to connect with industry leaders and gain insights
-                that will elevate your skills.
-            </p>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
+        <div className="event-page-container">
+            <header className="event-header">
+                <h1 className="event-title">Join Our Exclusive Event!</h1>
+                <p className="event-date">Date: November 15, 2023</p>
+            </header>
+            <main className="event-details">
+                <p className="event-description">Don't miss out on the chance to enhance your skills and network with industry leaders.</p>
                 <button 
-                    onClick={() => { recordClick(); }}
+                    className="cta-button"
                     style={{
-                        backgroundColor: '#ff6f61',
-                        color: '#fff',
-                        padding: '1rem 2rem',
-                        fontSize: '1.5rem',
-                        border: 'none',
+                        backgroundColor: '#FF5733', // High-contrast color
+                        color: '#FFFFFF',
+                        padding: '15px 30px',
+                        fontSize: '18px',
                         borderRadius: '5px',
+                        border: 'none',
                         cursor: 'pointer',
-                        boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
-                        transition: 'background-color 0.3s',
+                        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
+                        marginTop: '20px'
                     }}
-                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#ff3d3d'}
-                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#ff6f61'}
+                    onClick={() => {
+                        recordClick(); 
+                        // handle click event
+                    }}
                 >
-                    Reserve Your Spot Now!
+                    Sign Up Now! Limited Spots Available!
                 </button>
-            </div>
-            <p style={{ fontSize: '1.1rem', textAlign: 'center', marginTop: '2rem' }}>
-                <strong>{stats.signups} people already signed up!</strong><br />
-                Seats are limited – act fast!
-            </p>
+            </main>
+            <footer className="event-footer">
+                <p className="social-proof">Over 1,000 attendees last year!</p>
+            </footer>
         </div>
     );
 };

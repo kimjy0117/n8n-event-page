@@ -16,37 +16,38 @@ const EventPage = () => {
             </header>
             <main className="event-details" style={{ padding: '20px', textAlign: 'center', flexGrow: 1 }}>
                 <p className="event-description" style={{ fontSize: '1.3em', color: '#7f8c8d', marginBottom: '40px' }}>
-                    Don't miss this opportunity to enhance your skills and network with industry leaders. 
+                    Don't miss the chance to elevate your skills and connect with industry leaders. 
                     <br />
-                    <strong>Only a few spots left!</strong>
+                    <strong style={{ color: '#e74c3c' }}>Hurry, only a few spots left!</strong>
                 </p>
                 <button 
                     className="cta-button"
                     style={{
-                        backgroundColor: '#3498db', // High-contrast and action-oriented color
+                        backgroundColor: '#e74c3c', // Compelling action-oriented color
                         color: '#FFFFFF',
-                        padding: '30px 60px', // Increased button size
-                        fontSize: '24px', // Larger font size
-                        borderRadius: '12px',
+                        padding: '20px 50px', // Increased button size
+                        fontSize: '28px', // Larger font size
+                        borderRadius: '30px',
                         border: 'none',
                         cursor: 'pointer',
-                        boxShadow: '0 8px 16px rgba(0, 0, 0, 0.4)',
-                        marginTop: '30px',
+                        boxShadow: '0 12px 24px rgba(0, 0, 0, 0.5)',
+                        marginTop: '20px',
                         transition: 'background-color 0.3s, transform 0.3s',
                         display: 'inline-block',
+                        fontWeight: 'bold',
                     }}
                     onClick={() => {
                         recordClick(); 
                         // handle click event
                     }}
-                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#2980b9'} // darker on hover
-                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#3498db'} // original color
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#c0392b'} // darker on hover
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#e74c3c'} // original color
                 >
-                    🔥 Secure Your Spot Today! Only a Few Left!
+                    🔥 Grab Your Spot Now! Limited Availability!
                 </button>
             </main>
-            <footer className="event-footer" style={{ textAlign: 'center', marginTop: '50px', fontSize: '1em', color: '#999' }}>
-                <p className="social-proof" style={{ fontSize: '1.2em', color: '#27ae60' }}>Join over 1,000 satisfied attendees from last year!</p>
+            <footer className="event-footer" style={{ textAlign: 'center', marginTop: '30px', fontSize: '1em', color: '#999' }}>
+                <p className="social-proof" style={{ fontSize: '1.2em', color: '#27ae60', marginTop: '20px' }}>Join over 1,000 satisfied attendees from last year!</p>
             </footer>
         </div>
     );

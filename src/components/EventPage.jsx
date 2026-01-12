@@ -31,7 +31,7 @@ function EventPage() {
     <div className="event-container">
       {/* === AI 수정 가능 영역 시작 === */}
       
-      <div className="hero-section">
+      <div className="hero-section"
         <h1 className="hero-title" style={{ fontSize: '2.8rem', fontWeight: '700', color: '#d32f2f', marginBottom: '15px', textShadow: '1px 1px 5px rgba(255, 0, 0, 0.3)' }}>
           🎉 특별 이벤트!!
         </h1>

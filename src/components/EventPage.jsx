@@ -1,60 +1,52 @@
 import React from 'react';
 import { useStats } from './useStats';
-import { supabase } from './supabaseClient';
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient('your_supabase_url', 'your_supabase_key');
 
 const EventPage = () => {
-  const { stats } = useStats();
+  const { stats, recordClick } = useStats();
 
-  const recordClick = async () => {
-    const { data, error } = await supabase
-      .from('clicks')
-      .insert([{ event_id: '123', timestamp: new Date() }]);
-
-    if (error) {
-      console.error('Error recording click:', error);
-    }
+  const handleButtonClick = async () => {
+    await recordClick();
+    // Additional logic for clicking the button
   };
 
   return (
-    <div className="event-page" style={{ padding: '20px', maxWidth: '800px', margin: 'auto', textAlign: 'center' }}>
-      <h1 style={{ fontSize: '2.5em', marginBottom: '20px' }}>Join Our Exclusive Event!</h1>
-      <p style={{ fontSize: '1.2em', marginBottom: '30px' }}>
-        Don't miss out on this unique opportunity to connect and learn. Spots are limited!
+    <div className="event-container" style={{ padding: '20px', maxWidth: '800px', margin: '0 auto', fontFamily: 'Arial, sans-serif' }}>
+      <h1 style={{ fontSize: '2.5em', margin: '20px 0' }}>Join Us for an Exclusive Event!</h1>
+      <p style={{ fontSize: '1.2em', marginBottom: '20px' }}>
+        Don't miss out on this unique opportunity to learn and grow. Limited seats available!
       </p>
-      <button
-        onClick={() => {
-          recordClick();
-          window.location.href = '/register';
+      <button 
+        onClick={handleButtonClick}
+        style={{ 
+          backgroundColor: '#FF5733', 
+          color: '#FFFFFF', 
+          fontSize: '1.5em', 
+          padding: '15px 30px', 
+          border: 'none', 
+          borderRadius: '5px', 
+          cursor: 'pointer', 
+          display: 'block',
+          margin: '0 auto',
+          boxShadow: '0 4px 10px rgba(0, 0, 0, 0.2)',
+          transition: 'background-color 0.3s'
         }}
-        style={{
-          backgroundColor: '#FF5733',
-          color: '#FFFFFF',
-          fontSize: '1.5em',
-          padding: '15px 30px',
-          border: 'none',
-          borderRadius: '8px',
-          cursor: 'pointer',
-          boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
-          transition: 'background-color 0.3s',
-          marginTop: '10px',
+        onMouseOver={() => { 
+          this.style.backgroundColor = '#C70039'; 
         }}
-        onMouseEnter={(e) => (e.target.style.backgroundColor = '#C70039')}
-        onMouseLeave={(e) => (e.target.style.backgroundColor = '#FF5733')}
+        onMouseOut={() => { 
+          this.style.backgroundColor = '#FF5733'; 
+        }}
       >
-        Reserve Your Spot Now!
+        Secure Your Spot Now!
       </button>
-      <div style={{ marginTop: '40px' }}>
-        <h2 style={{ fontSize: '2em' }}>Why Attend?</h2>
-        <ul style={{ listStyle: 'none', padding: '0', textAlign: 'left', margin: '0 auto', display: 'inline-block' }}>
-          <li style={{ margin: '10px 0' }}>✅ Learn from industry experts</li>
-          <li style={{ margin: '10px 0' }}>✅ Network with like-minded individuals</li>
-          <li style={{ margin: '10px 0' }}>✅ Unlock exclusive resources</li>
-        </ul>
-        <p style={{ fontWeight: 'bold', fontSize: '0.9em' }}>Limited spots available! Act fast!</p>
+      <div className="social-proof" style={{ marginTop: '30px', textAlign: 'center' }}>
+        <p style={{ fontSize: '1em', color: '#555' }}>
+          Over 1,200 participants have signed up!
+        </p>
       </div>
-      <footer style={{ marginTop: '50px', fontSize: '0.8em', color: '#777' }}>
-        <p>{stats?.clicks} people have clicked to learn more!</p>
-      </footer>
     </div>
   );
 };

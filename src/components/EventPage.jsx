@@ -1,77 +1,50 @@
-/**
- * IMPORTANT FOR AI CODE GENERATION:
- * 
- * ⚠️ DO NOT CHANGE IMPORT PATHS - Keep these exact paths:
- * - useStats MUST be imported from: '../hooks/useStats'
- * - supabase MUST be imported from: '../lib/supabase' (if needed)
- * 
- * File structure:
- * - This file: src/components/EventPage.jsx
- * - useStats hook: src/hooks/useStats.js
- * - supabase client: src/lib/supabase.js
- * 
- * Common mistake: Using './useStats' or './supabaseClient' will cause build errors
- * Correct: Always use '../hooks/useStats' and '../lib/supabase'
- */
-
-import { useEffect } from 'react';
-import { useStats } from '../hooks/useStats';
+import React from 'react';
+import { useStats } from './useStats';
+import { supabase } from './supabaseClient';
 
 const EventPage = () => {
-  const { clicks, recordClick } = useStats();
+    const { stats } = useStats();
 
-  useEffect(() => {
-    const handleClick = () => {
-      recordClick();
-      // Additional tracking logic here
+    const recordClick = async () => {
+        // Logic to record the click event
+        await supabase
+            .from('clicks')
+            .insert([{ event_id: 1 }]);
     };
 
-    const button = document.getElementById('cta-button');
-    if (button) {
-      button.addEventListener('click', handleClick);
-    }
-
-    return () => {
-      if (button) {
-        button.removeEventListener('click', handleClick);
-      }
-    };
-  }, [recordClick]);
-
-  return (
-    <div style={{ padding: '20px', textAlign: 'center', maxWidth: '800px', margin: '0 auto' }}>
-      <h1 style={{ fontSize: '2.5em', margin: '20px 0' }}>Join Our Exclusive Event!</h1>
-      <p style={{ fontSize: '1.2em', lineHeight: '1.5', margin: '20px 0' }}>
-        Don't miss out on this opportunity to connect with industry leaders and gain insights into the latest trends!
-      </p>
-      <button
-        id="cta-button"
-        style={{
-          backgroundColor: '#ff5722',
-          color: 'white',
-          fontSize: '1.5em',
-          padding: '15px 30px',
-          border: 'none',
-          borderRadius: '5px',
-          cursor: 'pointer',
-          marginTop: '20px',
-          transition: 'background-color 0.3s',
-        }}
-        onMouseOver={(e) => { e.target.style.backgroundColor = '#e64a19'; }}
-        onMouseOut={(e) => { e.target.style.backgroundColor = '#ff5722'; }}
-      >
-        Reserve Your Spot Now!
-      </button>
-      <p style={{ margin: '20px 0', fontSize: '1em', color: '#555' }}>
-        Limited spots available! Act fast!
-      </p>
-      <div style={{ marginTop: '40px' }}>
-        <h2 style={{ fontSize: '2em' }}>See What Others Are Saying:</h2>
-        <p style={{ fontStyle: 'italic', margin: '15px 0' }}>“This event changed my career!”</p>
-        <p style={{ fontStyle: 'italic', margin: '15px 0' }}>“A must-attend for anyone in the industry!”</p>
-      </div>
-    </div>
-  );
+    return (
+        <div className="event-page" style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto' }}>
+            <h1 style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>Join Our Exclusive Event!</h1>
+            <p style={{ fontSize: '1.2rem', marginBottom: '2rem' }}>
+                Don’t miss out on this unique opportunity to connect with industry leaders and gain insights
+                that will elevate your skills.
+            </p>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
+                <button 
+                    onClick={() => { recordClick(); }}
+                    style={{
+                        backgroundColor: '#ff6f61',
+                        color: '#fff',
+                        padding: '1rem 2rem',
+                        fontSize: '1.5rem',
+                        border: 'none',
+                        borderRadius: '5px',
+                        cursor: 'pointer',
+                        boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
+                        transition: 'background-color 0.3s',
+                    }}
+                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#ff3d3d'}
+                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#ff6f61'}
+                >
+                    Reserve Your Spot Now!
+                </button>
+            </div>
+            <p style={{ fontSize: '1.1rem', textAlign: 'center', marginTop: '2rem' }}>
+                <strong>{stats.signups} people already signed up!</strong><br />
+                Seats are limited – act fast!
+            </p>
+        </div>
+    );
 };
 
 export default EventPage;

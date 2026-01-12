@@ -1,53 +1,49 @@
-import React from 'react';
+import { useEffect } from 'react';
 import { useStats } from './useStats';
 import { supabase } from './supabaseClient';
 
 const EventPage = () => {
-  const { stats, recordClick } = useStats();
+  const { stats } = useStats();
 
-  const handleButtonClick = async () => {
-    await recordClick();
-    // Additional logic for button click
+  const recordClick = async () => {
+    // Record click to Supabase or any other analytics
+    await supabase
+      .from('clicks')
+      .insert([{ event_id: stats.currentEvent.id }]);
   };
 
   return (
-    <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto', fontFamily: 'Arial, sans-serif' }}>
-      <header style={{ textAlign: 'center', margin: '20px 0' }}>
-        <h1 style={{ color: '#333', fontSize: '2.5em' }}>Join Our Amazing Event!</h1>
-        <p style={{ color: '#666', fontSize: '1.2em' }}>Don't miss out on the opportunity to learn from industry leaders.</p>
+    <div className="event-page">
+      <header className="event-header" style={{ textAlign: 'center', padding: '20px', backgroundColor: '#f7f9fc' }}>
+        <h1 style={{ fontSize: '2.5em', marginBottom: '10px' }}>{stats.currentEvent.title}</h1>
+        <p style={{ fontSize: '1.2em', color: '#555' }}>{stats.currentEvent.date}</p>
       </header>
-      
-      <section style={{ display: 'flex', justifyContent: 'center', margin: '30px 0' }}>
-        <img src="event-image.jpg" alt="Event" style={{ width: '100%', borderRadius: '10px' }} />
-      </section>
-
-      <div style={{ textAlign: 'center', marginTop: '40px' }}>
-        <h2 style={{ color: '#F77B00' }}>Limited Spots Available!</h2>
-        <p style={{ color: '#333', fontSize: '1.5em', fontWeight: 'bold' }}>Register now to secure your place!</p>
-        <button 
-          onClick={handleButtonClick} 
-          style={{
-            backgroundColor: '#FF5733', 
-            color: '#fff', 
-            padding: '15px 30px', 
-            fontSize: '1.2em', 
-            border: 'none', 
-            borderRadius: '5px', 
-            cursor: 'pointer',
-            marginTop: '20px',
-            boxShadow: '0 5px 15px rgba(0,0,0,0.2)',
-            transition: 'background-color 0.3s'
-          }}
-          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#C70039'}
-          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#FF5733'}
-        >
-          Reserve Your Spot Now!
-        </button>
-      </div>
-
-      <footer style={{ textAlign: 'center', marginTop: '50px', fontSize: '0.9em', color: '#666' }}>
-        <p>Join hundreds of satisfied participants!</p>
-        <p>Contact us at: support@event.com</p>
+      <main style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
+        <section className="event-details" style={{ marginBottom: '20px', lineHeight: '1.6' }}>
+          <h2 style={{ fontSize: '2em', marginBottom: '15px' }}>Event Description</h2>
+          <p>{stats.currentEvent.description}</p>
+        </section>
+        <section className="call-to-action" style={{ textAlign: 'center', margin: '30px 0' }}>
+          <h3 style={{ fontSize: '1.8em', color: '#333' }}>Don't miss out!</h3>
+          <p style={{ margin: '10px 0', fontSize: '1.2em', color: '#777' }}>Limited spots available!</p>
+          <button 
+            onClick={() => { recordClick(); }} 
+            style={{ 
+              backgroundColor: '#ff6f61', 
+              color: '#fff', 
+              padding: '15px 30px', 
+              fontSize: '1.5em', 
+              border: 'none', 
+              borderRadius: '5px', 
+              cursor: 'pointer', 
+              boxShadow: '2px 2px 10px rgba(0, 0, 0, 0.1)' 
+            }}>
+            Reserve Your Spot Now!
+          </button>
+        </section>
+      </main>
+      <footer className="event-footer" style={{ textAlign: 'center', padding: '20px', backgroundColor: '#f7f9fc' }}>
+        <small style={{ color: '#aaa' }}>© {new Date().getFullYear()} Event Company. All rights reserved.</small>
       </footer>
     </div>
   );
